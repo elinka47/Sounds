@@ -41,13 +41,13 @@
 	"sounds.config.furnaceMinecartFuel.option": "かまど付きトロッコへの燃料補給",
 	"sounds.config.furnaceMinecartFuel.option.description": "かまど付きトロッコに燃料を補給したときに再生される効果音",
 
-  "sounds.config.world.actions": "アクション",
+    "sounds.config.world.actions": "アクション",
 	"sounds.config.option.enableEnderpearlVariety": "エンダーパール効果音の多様化",
 	"sounds.config.option.description.enableEnderpearlVariety": "エンダーパールを投げたときの効果音をランダム化し、コーラスフルーツのテレポート音に近づけるかどうか",
-  "sounds.config.swordSwoosh.option": "剣を振る",
-  "sounds.config.swordSwoosh.option.description": "剣で攻撃したときに再生される効果音",
-  "sounds.config.frostWalker.option": "氷渡りの凍結",
-  "sounds.config.frostWalker.option.description": "氷渡りのブーツが水源を凍らせたときに再生される効果音",
+    "sounds.config.swordSwoosh.option": "剣を振る",
+    "sounds.config.swordSwoosh.option.description": "剣で攻撃したときに再生される効果音",
+    "sounds.config.frostWalker.option": "氷渡りの凍結",
+    "sounds.config.frostWalker.option.description": "氷渡りのブーツが水源を凍らせたときに再生される効果音",
 	"sounds.config.leadSnapping.option": "リードの切断",
 	"sounds.config.leadSnapping.option.description": "リードがモブから外れて切れたときに再生される効果音",
 	"sounds.config.bowPull.option": "弓を引く",
@@ -147,6 +147,6 @@
 	"sounds.config.option.enableVerboseSoundTypeLogging": "詳細ログを有効化",
 	"sounds.config.option.description.enableVerboseSoundTypeLogging": "ブロックのサウンドタイプに関する詳細情報をコンソールに出力するかどうか。デバッグ目的で役立ちます",
 
-  "sounds.subtitle.sword_swoosh": "剣を振る"
+    "sounds.subtitle.sword_swoosh": "剣を振る"
 
 }
