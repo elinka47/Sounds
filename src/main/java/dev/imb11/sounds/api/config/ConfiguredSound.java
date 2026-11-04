@@ -13,8 +13,8 @@ import dev.isxander.yacl3.api.OptionGroup;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.api.controller.DropdownStringControllerBuilder;
 import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
+import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -22,32 +22,31 @@ import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 
 public class ConfiguredSound {
     public static final Codec<ConfiguredSound> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     Codec.STRING.fieldOf("id").forGetter(ConfiguredSound::getId),
-                    ResourceLocation.CODEC.fieldOf("soundEvent").forGetter(sound -> sound.soundEvent),
+                    Identifier.CODEC.fieldOf("soundEvent").forGetter(sound -> sound.soundEvent),
                     Codec.BOOL.fieldOf("shouldPlay").forGetter(ConfiguredSound::shouldPlay),
                     Codec.FLOAT.fieldOf("pitch").forGetter(ConfiguredSound::getPitch),
                     Codec.FLOAT.fieldOf("volume").forGetter(ConfiguredSound::getVolume)
             ).apply(instance, ConfiguredSound::new));
     public final String id;
     public boolean enabled;
-    public ResourceLocation soundEvent;
+    public Identifier soundEvent;
     public float pitch = 1f;
     public float volume = 1f;
     private float _pendingPitch = 1f;
     private float _pendingVolume = 1f;
-    private ResourceLocation _pendingSoundEvent;
+    private Identifier _pendingSoundEvent;
 
-    public ConfiguredSound(String id, ResourceLocation soundEvent, boolean enabled, float pitch, float volume) {
+    public ConfiguredSound(String id, Identifier soundEvent, boolean enabled, float pitch, float volume) {
         this.enabled = enabled;
         this.soundEvent = soundEvent;
         this.pitch = pitch;
@@ -62,15 +61,11 @@ public class ConfiguredSound {
     }
 
     public ConfiguredSound(String id, Holder.Reference<SoundEvent> soundEvent, boolean enabled, float pitch, float volume) {
-        this(id, soundEvent.key().location(), enabled, pitch, volume);
+        this(id, soundEvent.key().identifier(), enabled, pitch, volume);
     }
 
     public ConfiguredSound(String id, SoundEvent soundEvent, boolean enabled, float pitch, float volume) {
-        //? if <1.21.2 {
-        this(id, soundEvent.getLocation(), enabled, pitch, volume);
-        //?} else {
-        /*this(id, soundEvent.location(), enabled, pitch, volume);
-        *///?}
+        this(id, soundEvent.location(), enabled, pitch, volume);
     }
 
     public ConfiguredSound(String id, Holder<SoundEvent> soundEvent, boolean enabled, float pitch, float volume) {
@@ -105,12 +100,12 @@ public class ConfiguredSound {
                 .description(OptionDescription.createBuilder()
                         .text(Component.translatable("sounds.config.event.description")).build())
                 .binding(defaults.soundEvent.toString(), () -> this.soundEvent.toString(), (val) ->
-                        this.soundEvent = ResourceLocation.parse(val))
-                .listener((opt, val) -> this._pendingSoundEvent = ResourceLocation.parse(val))
+                        this.soundEvent = Identifier.parse(val))
+                .listener((opt, val) -> this._pendingSoundEvent = Identifier.parse(val))
                 .controller(opt -> DropdownStringControllerBuilder.create(opt)
                         .allowAnyValue(false)
                         .allowEmptyValue(false)
-                        .values(MixinStatics.FOUND_SOUND_EVENTS.stream().map(ResourceLocation::toString).toList()))
+                        .values(MixinStatics.FOUND_SOUND_EVENTS.stream().map(Identifier::toString).toList()))
                 .build();
 
         return new ArrayList<>(List.of(volumeOpt, pitchOpt, soundEventOpt));
@@ -158,16 +153,20 @@ public class ConfiguredSound {
                 .build();
     }
 
-    public final SoundEvent fetchSoundEvent(ResourceLocation location) {
+    public final SoundEvent fetchSoundEvent(Identifier location) {
         return RegistryUtils.getSoundEventRegistry(Minecraft.getInstance().level).apply(location);
     }
 
     protected static long lastShownToast = -1L;
 
     public void playSound() {
+        playSound(false);
+    }
+
+    public void playSound(boolean subtitle) {
         if (this.enabled) {
             try {
-                this.playSound(this.soundEvent, this.pitch, this.volume);
+                this.playSound(this.soundEvent, this.pitch, this.volume, subtitle);
             } catch (Exception ignored) {
                 // Prevent toast spam:
                 ignored.printStackTrace();
@@ -175,11 +174,7 @@ public class ConfiguredSound {
                     lastShownToast = System.currentTimeMillis();
                     Minecraft client = Minecraft.getInstance();
 
-                    //? if <1.21.2 {
-                    var toastManager = client.getToasts();
-                    //?} else {
-                    /*var toastManager = client.getToastManager();
-                    *///?}
+                    var toastManager = client.getToastManager();
 
                     toastManager.addToast(SystemToast.multiline(client,
                             SystemToast.SystemToastId.WORLD_ACCESS_FAILURE,
@@ -192,17 +187,13 @@ public class ConfiguredSound {
 
     private void playPreviewSound() {
         try {
-            this.playSound(this._pendingSoundEvent, _pendingPitch, _pendingVolume);
+            this.playSound(this._pendingSoundEvent, _pendingPitch, _pendingVolume, false);
         } catch (Exception ignored) {
             if (System.currentTimeMillis() > lastShownToast + 5000) {
                 lastShownToast = System.currentTimeMillis();
                 Minecraft client = Minecraft.getInstance();
 
-                //? if <1.21.2 {
-                var toastManager = client.getToasts();
-                //?} else {
-                /*var toastManager = client.getToastManager();
-                *///?}
+                var toastManager = client.getToastManager();
 
                 toastManager.addToast(SystemToast.multiline(client,
                         SystemToast.SystemToastId.WORLD_ACCESS_FAILURE,
@@ -212,20 +203,23 @@ public class ConfiguredSound {
         }
     }
 
-    private void playSound(ResourceLocation soundEvent, float pitch, float volume) {
-        var pos = Vec3.ZERO;
+    private void playSound(Identifier soundEvent, float pitch, float volume, boolean subtitle) {
+        playSound(soundEvent, pitch, volume, BlockPos.ZERO, subtitle);
+    }
+
+    private void playSound(Identifier soundEvent, float pitch, float volume, BlockPos pos, boolean subtitle) {
         var attenuation = SoundInstance.Attenuation.LINEAR;
         if (LoaderUtils.isModInstalled("sound_physics_perfected") && Minecraft.getInstance().player != null) {
             attenuation = SoundInstance.Attenuation.NONE;  // Disable Attenuation when using SPP
         }
-        this.playSound(new SimpleSoundInstance(soundEvent, SoundSource.MASTER, volume, pitch, SoundsClient.RANDOM, false, 0, attenuation, pos.x, pos.y, pos.z, true));
+        this.playSound(new ConfiguredSimpleSoundInstance(soundEvent, SoundSource.UI, volume, pitch, SoundsClient.RANDOM, false, 0, attenuation, pos.getX(), pos.getY(), pos.getZ(), true, subtitle));
     }
 
-    public @Nullable SimpleSoundInstance getSoundInstance() {
+    public @Nullable ConfiguredSimpleSoundInstance getSoundInstance() {
         if (this.enabled) {
             try {
                 final SoundEvent event = RegistryUtils.getSoundEventRegistry(Minecraft.getInstance().level).apply(this.soundEvent);
-                return SimpleSoundInstance.forUI(event, pitch, volume);
+                return ConfiguredSimpleSoundInstance.forUI(event, pitch, volume);
             } catch (Exception ignored) {
                 return null;
             }
@@ -233,13 +227,13 @@ public class ConfiguredSound {
         return null;
     }
 
-    public void playSound(SoundInstance soundInstance) {
+    public void playSound(ConfiguredSimpleSoundInstance soundInstance) {
         if (this.enabled) {
             Minecraft.getInstance().getSoundManager().play(soundInstance);
         }
     }
 
-    public void stopSound(SoundInstance soundInstance) {
+    public void stopSound(ConfiguredSimpleSoundInstance soundInstance) {
         if (this.enabled) {
             Minecraft.getInstance().getSoundManager().stop(soundInstance);
         }
@@ -249,7 +243,7 @@ public class ConfiguredSound {
         return enabled;
     }
 
-    public ResourceLocation getSoundEvent() {
+    public Identifier getSoundEvent() {
         return this.soundEvent;
     }
 

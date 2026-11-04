@@ -1,12 +1,13 @@
 package dev.imb11.sounds.mixin.ui;
 
 import dev.imb11.mru.LoaderUtils;
+import dev.imb11.sounds.SoundsClient;
 import dev.imb11.sounds.config.ChatSoundsConfig;
 import dev.imb11.sounds.config.SoundsConfig;
-import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.multiplayer.chat.GuiMessageSource;
+import net.minecraft.client.multiplayer.chat.GuiMessageTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
 import org.spongepowered.asm.mixin.Final;
@@ -17,6 +18,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.regex.PatternSyntaxException;
+
 @Mixin(ChatComponent.class)
 public class MentionSoundEffect {
     @Shadow
@@ -26,15 +29,15 @@ public class MentionSoundEffect {
     @Unique
     private float sounds$cooldownPeriod = 0f;
 
-    @Inject(method = "render", at = @At("HEAD"))
-    public void $cooldown_period(GuiGraphics context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/components/ChatComponent$ChatGraphicsAccess;IILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;)V", at = @At("HEAD"))
+    public void $cooldown_period(ChatComponent.ChatGraphicsAccess graphics, int screenHeight, int ticks, ChatComponent.DisplayMode displayMode, CallbackInfo ci) {
         if (sounds$cooldownPeriod > 0) {
-            sounds$cooldownPeriod -= this.minecraft.getTimer().getGameTimeDeltaPartialTick(true);
+            sounds$cooldownPeriod -= this.minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         }
     }
 
-    @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V", at = @At("HEAD"), cancellable = false)
-    public void $mention_recieve_sound_effect(Component message, MessageSignature signatureData, GuiMessageTag indicator, CallbackInfo ci) {
+    @Inject(method = "addMessage", at = @At("HEAD"), cancellable = false)
+    public void $mention_recieve_sound_effect(Component message, MessageSignature signature, GuiMessageSource source, GuiMessageTag indicator, CallbackInfo ci) {
         if (sounds$cooldownPeriod > 0 && (SoundsConfig.get(ChatSoundsConfig.class).enableChatSoundCooldown || LoaderUtils.isModInstalled("chatpatches"))) {
             return;
         }
@@ -52,7 +55,14 @@ public class MentionSoundEffect {
         regex.deleteCharAt(regex.length() - 1);
         regex.append(").*");
 
-        boolean isMention = messageString.matches(regex.toString());
+        boolean isMention;
+        try {
+            isMention = messageString.matches(regex.toString());
+        } catch (PatternSyntaxException e) {
+            SoundsClient.LOGGER.error("Invalid mention expression", e);
+            isMention = false;
+        }
+
 
         if (SoundsConfig.get(ChatSoundsConfig.class).ignoreSystemChats) {
             if (indicator == GuiMessageTag.system() || indicator == GuiMessageTag.chatError()) {
@@ -61,7 +71,7 @@ public class MentionSoundEffect {
         }
 
         if (isMention)
-            SoundsConfig.get(ChatSoundsConfig.class).mentionSoundEffect.playSound();
+            SoundsConfig.get(ChatSoundsConfig.class).mentionSoundEffect.playSound(true);
         else SoundsConfig.get(ChatSoundsConfig.class).messageSoundEffect.playSound();
     }
 }

@@ -1,9 +1,9 @@
 @file:Suppress("UnstableApiUsage")
 
 plugins {
-    id("fabric-loom")
+    id("net.fabricmc.fabric-loom")
     id("dev.kikugie.postprocess.jsonlang")
-    id("me.modmuss50.mod-publish-plugin")
+//    id("me.modmuss50.mod-publish-plugin")
 }
 
 tasks.named<ProcessResources>("processResources") {
@@ -17,7 +17,7 @@ tasks.named<ProcessResources>("processResources") {
         this["mod_description"] = "A highly configurable sound overhaul mod that adds new sound effects while improving vanilla sounds too."
         this["mod_license"] = "ARR"
         this["target_yacl"] = "*"
-        this["target_mru"] = prop("deps.mru")
+        this["target_mru"] = ">=1.0.30"
         this["target_fabricloader"] = "0.17.2"
     }
 
@@ -34,21 +34,23 @@ jsonlang {
     prettyPrint = true
 }
 
+
+stonecutter {
+    replacements.string {
+        direction = eval(current.version, ">1.21.10")
+        replace("ResourceLocation", "Identifier")
+    }
+    replacements.string {
+        direction = eval(current.version, ">1.21.10")
+        replace("net.minecraft.Util", "net.minecraft.util.Util")
+    }
+    replacements.string {
+        direction = eval(current.version, ">1.21.10")
+        replace("ResourceKey::location", "ResourceKey::identifier")
+    }
+}
+
 repositories {
-    maven {
-        name = "IMB11"
-        url = uri("https://maven.imb11.dev/releases")
-        content {
-            includeGroupAndSubgroups("dev.imb11")
-        }
-    }
-    maven {
-        name = "shedaniel (Cloth Config)"
-        url = uri("https://maven.shedaniel.me/")
-        content {
-            includeGroupAndSubgroups("me.shedaniel")
-        }
-    }
     maven {
         name = "Terraformers (Mod Menu)"
         url = uri("https://maven.terraformersmc.com/releases/")
@@ -58,11 +60,11 @@ repositories {
         }
     }
     maven {
-        name = "Xander Maven"
-        url = uri("https://maven.isxander.dev/releases")
+        name = "gegy"
+        url = uri("https://maven.gegy.dev")
         content {
-            includeGroupAndSubgroups("dev.isxander")
-            includeGroupAndSubgroups("org.quiltmc.parsers")
+            includeGroupAndSubgroups("dev.yumi")
+            includeGroupAndSubgroups("dev.lambdaurora")
         }
     }
     maven {
@@ -72,30 +74,36 @@ repositories {
             includeGroupAndSubgroups("maven.modrinth")
         }
     }
+    maven {
+        name = "Xander Maven"
+        url = uri("https://maven.isxander.dev/releases")
+        content {
+            includeGroupAndSubgroups("org.quiltmc.parsers")
+        }
+    }
+    maven {
+        name = "Cassian's Maven"
+        url = uri("https://maven.cassian.cc/")
+        content {
+            includeGroupAndSubgroups("cc.cassian")
+            includeGroupAndSubgroups("folk.sisby")
+        }
+    }
+    mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:${property("deps.minecraft")}")
-    mappings(loom.layered {
-        officialMojangMappings()
-        if (hasProperty("deps.parchment"))
-            parchment("org.parchmentmc.data:parchment-${property("deps.parchment")}@zip")
-    })
-    modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fabric_api")}")
 
-    modImplementation("dev.imb11:mru:${property("deps.mru")}+fabric")
+    implementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fabric_api")}")
 
-    modCompileOnly("dev.emi:emi-fabric:${property("compile.emi")}")
-    modCompileOnly("maven.modrinth:trashslot:${property("compile.trashslot")}")
+    compileOnly("maven.modrinth:trashslot:${property("compile.trashslot")}")
+    implementation("cc.cassian.mru:mru-fabric:${property("deps.mru")}")
 
-    modImplementation("dev.isxander:yet-another-config-lib:${property("deps.yacl")}-fabric")
-    modImplementation("com.terraformersmc:modmenu:${property("runtime.modmenu")}")
-
-    modCompileOnly("maven.modrinth:amendments:${property("compile.amendments")}")
-
-    val modules = listOf("transitive-access-wideners-v1", "registry-sync-v0", "resource-loader-v0")
-    for (it in modules) modImplementation(fabricApi.module("fabric-$it", property("deps.fabric_api") as String))
+    implementation("dev.isxander:yet-another-config-lib:${property("deps.yacl")}-fabric")
+    implementation("com.terraformersmc:modmenu:${property("runtime.modmenu")}")
 }
 
 fabricApi {
@@ -105,6 +113,10 @@ fabricApi {
     }
 }
 
+tasks.named("processResources") {
+    dependsOn(":${stonecutter.current.project}:stonecutterGenerate")
+}
+
 tasks {
     processResources {
         exclude("**/neoforge.mods.toml", "**/mods.toml")
@@ -112,30 +124,26 @@ tasks {
 
     register<Copy>("buildAndCollect") {
         group = "build"
-        from(remapJar.map { it.archiveFile })
+        from(jar.map { it.archiveFile })
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
         dependsOn("build")
     }
 }
 
-tasks.named("processResources") {
-    dependsOn(":${stonecutter.current.project}:stonecutterGenerate")
-}
-
 java {
     withSourcesJar()
-    val javaCompat = if (stonecutter.eval(stonecutter.current.version, ">=1.21")) {
-        JavaVersion.VERSION_21
+    val javaCompat = if (stonecutter.eval(stonecutter.current.version, ">26")) {
+        JavaVersion.VERSION_25
     } else {
-        JavaVersion.VERSION_17
+        JavaVersion.VERSION_21
     }
     sourceCompatibility = javaCompat
     targetCompatibility = javaCompat
 }
 
 val additionalVersionsStr = findProperty("publish.additionalVersions") as String?
-val additionalVersions: List<String> = additionalVersionsStr
-    ?.split(",")
-    ?.map { it.trim() }
-    ?.filter { it.isNotEmpty() }
-    ?: emptyList()
+        val additionalVersions: List<String> = additionalVersionsStr
+        ?.split(",")
+        ?.map { it.trim() }
+        ?.filter { it.isNotEmpty() }
+        ?: emptyList()

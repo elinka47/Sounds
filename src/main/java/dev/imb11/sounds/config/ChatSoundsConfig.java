@@ -1,34 +1,31 @@
 package dev.imb11.sounds.config;
 
 import dev.imb11.mru.LoaderUtils;
-import dev.imb11.sounds.config.utils.ConfigGroup;
+import dev.imb11.sounds.SoundsClient;
 import dev.imb11.sounds.api.config.ConfiguredSound;
+import dev.imb11.sounds.config.utils.ConfigGroup;
+import dev.imb11.sounds.sound.CustomSounds;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
-import dev.isxander.yacl3.api.controller.FloatFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 
 import static dev.imb11.sounds.config.SoundsConfig.HELPER;
 
 public class ChatSoundsConfig extends ConfigGroup<ChatSoundsConfig> implements YetAnotherConfigLib.ConfigBackedBuilder<ChatSoundsConfig> {
     // == MESSAGING SOUNDS == //
     @SerialEntry
-    public final ConfiguredSound typingSoundEffect = new ConfiguredSound("typing", SoundEvents.NOTE_BLOCK_HAT, true, 1.6f, 0.4f);
+    public final ConfiguredSound messageSoundEffect = new ConfiguredSound("message", CustomSounds.INVENTORY_SCROLL, true, 2.0f, 0.8f);
     @SerialEntry
-    public final ConfiguredSound messageSoundEffect = new ConfiguredSound("message", SoundEvents.NOTE_BLOCK_HAT, true, 2.0f, 0.8f);
-    @SerialEntry
-    public final ConfiguredSound mentionSoundEffect = new ConfiguredSound("mention", SoundEvents.NOTE_BLOCK_CHIME, true, 1.8f, 0.9f);
+    public final ConfiguredSound mentionSoundEffect = new ConfiguredSound("mention", CustomSounds.CHAT_PING, true, 1.8f, 0.9f);
     @SerialEntry
     public ArrayList<String> mentionKeywords = new ArrayList<>(List.of(
-            "@" + Minecraft.getInstance().getUser().getName()
+            "@" + SoundsClient.username()
     ));
     @SerialEntry
     public boolean ignoreSystemChats = false;
@@ -48,8 +45,8 @@ public class ChatSoundsConfig extends ConfigGroup<ChatSoundsConfig> implements Y
     }
 
     @Override
-    public ResourceLocation getIcon() {
-        return ResourceLocation.fromNamespaceAndPath("sounds", "textures/gui/chat_sounds.png");
+    public Identifier getIcon() {
+        return Identifier.fromNamespaceAndPath("sounds", "textures/gui/chat_sounds.png");
     }
 
     @Override
@@ -71,15 +68,14 @@ public class ChatSoundsConfig extends ConfigGroup<ChatSoundsConfig> implements Y
                 .description(OptionDescription.of(Component.translatable("sounds.config.mentionKeywords.option.description")))
                 .binding(defaults.mentionKeywords, () -> config.mentionKeywords, (value) -> config.mentionKeywords = new ArrayList<>(value))
                 .controller(StringControllerBuilder::create)
-                .initial("@" + Minecraft.getInstance().getUser().getName())
+                .initial("@" + SoundsClient.username())
                 .insertEntriesAtEnd(true)
                 .build();
 
-        builder.title(Component.nullToEmpty("Chat Sounds"));
+        builder.title(Component.literal("Chat Sounds"));
         builder.category(ConfigCategory.createBuilder()
                 .name(Component.translatable("sounds.config.chat.messaging"))
                 .option(HELPER.get("ignoreSystemChats", defaults.ignoreSystemChats, () -> config.ignoreSystemChats, v -> config.ignoreSystemChats = v))
-                .group(config.typingSoundEffect.getOptionGroup(defaults.typingSoundEffect))
                 .group(config.messageSoundEffect.getOptionGroup(defaults.messageSoundEffect))
                 .group(config.mentionSoundEffect.getOptionGroup(defaults.mentionSoundEffect))
                 .option(mentionKeywordsOption)

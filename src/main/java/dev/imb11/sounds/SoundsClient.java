@@ -1,9 +1,8 @@
 package dev.imb11.sounds;
 
-import dev.imb11.mru.API;
+import cc.cassian.mru.client.events.ClientRegisterEvent;
+import cc.cassian.mru.events.CommonRegisterEvent;
 import dev.imb11.mru.LoaderUtils;
-import dev.imb11.sounds.config.ChatSoundsConfig;
-import dev.imb11.sounds.config.ModConfig;
 import dev.imb11.sounds.config.SoundsConfig;
 import dev.imb11.sounds.dynamic.DynamicSoundHelper;
 import dev.imb11.sounds.sound.CustomSounds;
@@ -13,46 +12,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 
-public class SoundsClient {
+import net.minecraft.resources.Identifier;
+
+public class SoundsClient implements ClientRegisterEvent, CommonRegisterEvent {
     public static final RandomSource RANDOM = RandomSource.create();
     public static final Path DEFAULT_PACK_PATH = LoaderUtils.getConfigFolder("sounds").resolve("dynamic_sounds");
     public static final Logger LOGGER = LoggerFactory.getLogger("Sounds");
-    public static String[] SUPPORTERS = new String[] {
-            "You have no internet.",
-            "Unable to gather supporters."
-    };
+    public static String username;
 
-    public static ResourceLocation id(String id) {
-        return ResourceLocation.fromNamespaceAndPath("sounds", id);
+    public static Identifier id(String id) {
+        return Identifier.fromNamespaceAndPath("sounds", id);
     }
 
-    public static void init() {
-
-        DynamicSoundHelper.initialize();
-
+    @Override
+    public void onInitialize() {
         CustomSounds.initialize();
+    }
 
-        /*
-        CompletableFuture.runAsync(() -> {
-            try {
-                API apiClient = new API();
-                var supporters = apiClient.getKofiSupporters();
-                if (supporters.length>0) {
-                    SUPPORTERS = supporters;
-                }
-            } catch (Exception ignored) {}
-        }, Util.nonCriticalIoPool());
-        */
-        //? if !(neoforge && >=1.21.5) {
+    public static String username() {
+        return username;
+    }
+
+    @Override
+    public void onInitializeClient() {
+        DynamicSoundHelper.initialize();
         SoundsConfig.loadAll();
         ConfigSetters.init();
-        //?}
     }
 }

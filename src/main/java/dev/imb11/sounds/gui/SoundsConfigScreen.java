@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Util;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
@@ -34,11 +34,11 @@ public class SoundsConfigScreen extends Screen {
     public int supporterIndex = -1;
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         assert this.minecraft != null;
-        context.drawCenteredString(this.minecraft.font, Component.translatable("sounds.config.title"), this.width / 2, 10, 0xFFFFFF);
+        context.centeredText(this.minecraft.font, Component.translatable("sounds.config.title"), this.width / 2, 10, 0xFFFFFFFF);
 
         /*
         if(timeSinceLastSupporter == -1) {
@@ -73,9 +73,8 @@ public class SoundsConfigScreen extends Screen {
         int textTotalHeight = font.wordWrapHeight(text, spaceBetween - 20);
         int targetY = 10 + font.lineHeight / 2;
         int textY = targetY - (textTotalHeight / 2);
-       
-         */
-        // TODO: Reimpl this.
+//        RenderUtils.drawTextWrapped(context, font, text, textX, textY, spaceBetween - 20, color);
+        */
     }
 
     @Override

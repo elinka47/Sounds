@@ -7,11 +7,13 @@
     "minecraft:iron_hoe",
     "minecraft:iron_horse_armor",
     "minecraft:iron_leggings",
+    "minecraft:iron_nautilus_armor",
     "minecraft:iron_pickaxe",
     "minecraft:iron_shovel",
+    "minecraft:iron_spear",
     "minecraft:iron_sword",
     "minecraft:shears",
     "minecraft:shield"
   ],
-  "soundEvent": "minecraft:item.armor.equip_iron"
+  "soundEvent": "sounds:item.armor.equip_iron"
 }

@@ -12,11 +12,11 @@ import dev.isxander.yacl3.api.controller.DropdownStringControllerBuilder;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 
@@ -25,21 +25,21 @@ import static dev.imb11.sounds.config.SoundsConfig.HELPER;
 public class WorldSoundsConfig extends ConfigGroup<WorldSoundsConfig> implements YetAnotherConfigLib.ConfigBackedBuilder<WorldSoundsConfig> {
     /// == MECHANICS == ///
     @SerialEntry
-    public DynamicConfiguredSound<Integer, RepeaterSoundContext> repeaterUseSoundEffect = new DynamicConfiguredSound<>("repeaterUse", SoundEvents.STONE_BUTTON_CLICK_ON, true, 0.95F, 0.3F, true);
+    public DynamicConfiguredSound<Integer, RepeaterSoundContext> repeaterUseSoundEffect = new DynamicConfiguredSound<>("repeaterUse", CustomSounds.REPEATER_CLICK, true, 0.95F, 0.3F, true);
     @SerialEntry
     public ConfiguredSound jukeboxUseSoundEffect = new ConfiguredSound("jukeboxUse", SoundEvents.NOTE_BLOCK_BASEDRUM, true, 0.8F, 0.75F);
     @SerialEntry
-    public ConfiguredSound daylightDetectorUseSoundEffect = new ConfiguredSound("daylightDetectorUse", SoundEvents.NOTE_BLOCK_HAT, true, 0.8F, 0.45F);
+    public ConfiguredSound daylightDetectorUseSoundEffect = new ConfiguredSound("daylightDetectorUse", CustomSounds.DAYLIGHT_DETECTOR_USE, true, 0.8F, 0.45F);
     @SerialEntry
-    public ConfiguredSound furnaceMinecartFuelSoundEffect = new ConfiguredSound("furnaceMinecartFuel", SoundEvents.CREEPER_HURT, true, 1.9F, 0.2F);
+    public ConfiguredSound furnaceMinecartFuelSoundEffect = new ConfiguredSound("furnaceMinecartFuel", CustomSounds.FURNACE_MINECART_USE, true, 1.9F, 0.2F);
 
     /// == ACTIONS == ///
     @SerialEntry
-    public ConfiguredSound swordSwooshSoundEffect = new ConfiguredSound("swordSwoosh", ResourceLocation.fromNamespaceAndPath("sounds", "item.sword.swoosh"), true, 1.3F, 0.3F);
+    public ConfiguredSound swordSwooshSoundEffect = new ConfiguredSound("swordSwoosh", CustomSounds.ITEM_SWORD_SWOOSH, true, 1.3F, 0.3F);
     @SerialEntry
     public ConfiguredSound frostWalkerSoundEffect = new ConfiguredSound("frostWalker", SoundEvents.POWDER_SNOW_FALL, true, 2.0F, 0.5F);
     @SerialEntry
-    public ConfiguredSound leadSnappingSoundEffect = new ConfiguredSound("leadSnapping", SoundEvents.LEASH_KNOT_BREAK, true, 1.0F, 0.5F);
+    public ConfiguredSound leadSnappingSoundEffect = new ConfiguredSound("leadSnapping", SoundEvents.LEAD_BREAK, true, 1.0F, 0.5F);
     @SerialEntry
     public ConfiguredSound bowPullSoundEffect = new ConfiguredSound("bowPull", SoundEvents.CROSSBOW_LOADING_MIDDLE, true, 1.0F, 0.25F);
     @SerialEntry
@@ -63,8 +63,8 @@ public class WorldSoundsConfig extends ConfigGroup<WorldSoundsConfig> implements
     }
 
     @Override
-    public ResourceLocation getIcon() {
-        return ResourceLocation.fromNamespaceAndPath("sounds", "textures/gui/world_sounds.png");
+    public Identifier getIcon() {
+        return Identifier.fromNamespaceAndPath("sounds", "textures/gui/world_sounds.png");
     }
 
     @Override
@@ -79,7 +79,7 @@ public class WorldSoundsConfig extends ConfigGroup<WorldSoundsConfig> implements
 
     @Override
     public YetAnotherConfigLib.Builder build(WorldSoundsConfig defaults, WorldSoundsConfig config, YetAnotherConfigLib.Builder builder) {
-        builder.title(Component.nullToEmpty("World Sounds"));
+        builder.title(Component.literal("World Sounds"));
         builder.category(ConfigCategory.createBuilder()
                 .name(Component.translatable("sounds.config.world.mechanics"))
                 .group(config.repeaterUseSoundEffect.getOptionGroup(defaults.repeaterUseSoundEffect))
@@ -92,7 +92,7 @@ public class WorldSoundsConfig extends ConfigGroup<WorldSoundsConfig> implements
                 .option(HELPER.get("disableBlocksEntirely", defaults.disableBlocksEntirely, () -> config.disableBlocksEntirely, v1 -> config.disableBlocksEntirely = v1))
                 .option(LabelOption.create(Component.translatable("sounds.config.world.blocks.description")))
                 .option(ButtonOption.createBuilder()
-                        .name(Component.nullToEmpty("Open Wiki"))
+                        .name(Component.literal("Open Wiki"))
                         .description(OptionDescription.EMPTY)
                         .action((screen, option) -> Util.getPlatform().openUri("https://docs.imb11.dev/sounds/data/custom-block-sounds"))
                         .build())
@@ -104,8 +104,8 @@ public class WorldSoundsConfig extends ConfigGroup<WorldSoundsConfig> implements
                         .controller(opt -> DropdownStringControllerBuilder.create(opt)
                                 .allowEmptyValue(false)
                                 .values(BuiltInRegistries.BLOCK.registryKeySet().stream()
-                                        .map(ResourceKey::location)
-                                        .map(ResourceLocation::toString).toList()))
+                                        .map(ResourceKey::identifier)
+                                        .map(Identifier::toString).toList()))
                         .initial("minecraft:grass_block")
                         .build()
                 )
