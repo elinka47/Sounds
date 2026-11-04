@@ -75,6 +75,10 @@
 	"sounds.config.ui": "UIサウンド",
 
 	"sounds.config.ui.interface": "インターフェース",
+	"sounds.config.option.enableDynamicItemSounds": "動的アイテムサウンド",
+	"sounds.config.option.description.enableDynamicItemSounds": "アイテム音をリソースパックでカスタマイズできるようにします。すべてのUI音を同じにしたい場合は無効にして下さい。",
+	"sounds.config.option.ignoredItems": "無視するアイテム",
+	"sounds.config.option.description.ignoredItems": "サウンド設定がタグに適用されていても、ここに含まれるアイテムにはカスタムサウンド設定が適用されません。",
 	"sounds.config.option.ignoreEmptyHotbarSlots": "空のホットバースロットを無視",
 	"sounds.config.option.description.ignoreEmptyHotbarSlots": "効果音を再生する際、空のホットバースロットを無視するかどうか。\n\n注意：アイテムドロップの仕様が特殊なため、ホットバーのドロップ音には適用されません。その場合は「空のインベントリスロットを無視」を切り替えて下さい",
 	"sounds.config.inventoryOpen.option": "インベントリを開く",
@@ -83,8 +87,6 @@
 	"sounds.config.inventoryScroll.option.description": "インベントリ内でスクロールバーを使ったときに再生される効果音",
 	"sounds.config.inventoryClose.option": "インベントリを閉じる",
 	"sounds.config.inventoryClose.option.description": "エンチャント台など、インベントリを持つ画面を閉じたときに再生される効果音",
-	"sounds.config.inventoryTyping.option": "インベントリでの入力",
-	"sounds.config.inventoryTyping.option.description": "金床の名前欄やクリエイティブインベントリの検索欄に文字を入力したときに再生される効果音",
 	"sounds.config.hotbarScroll.option": "ホットバーのスクロール",
 	"sounds.config.hotbarScroll.option.description": "ホットバーをスクロールしたり、数字キーでスロットを選択したときに再生される効果音",
 	"sounds.config.hotbarPick.option": "ブロックを選択",
@@ -146,7 +148,14 @@
 	"sounds.config.option.description.hideSoundsButtonInSoundMenu": "バニラのサウンド設定画面から、Modの設定画面を開く「Sounds」ボタンを非表示にするかどうか",
 	"sounds.config.option.enableVerboseSoundTypeLogging": "詳細ログを有効化",
 	"sounds.config.option.description.enableVerboseSoundTypeLogging": "ブロックのサウンドタイプに関する詳細情報をコンソールに出力するかどうか。デバッグ目的で役立ちます",
+	"sounds.config.option.globalVolume": "全体音量",
+	"sounds.config.option.description.globalVolume": "このModが追加するすべてのサウンドの音量を調整します",
 
-    "sounds.subtitle.sword_swoosh": "剣を振る"
+	
+    "sounds.subtitle.sword_swoosh": "剣を振る",
+	"sounds.subtitle.chat_ping": "チャットの通知音",
+	"sounds.subtitle.block.repeater.click": "リピーターのカチッという音",
+	"sounds.subtitle.block.daylight_detector.use": "日照センサーのカチッという音",
+	"sounds.subtitle.entity.furnace_minecart.use": "かまど付きトロッコのパチパチという音"
 
 }
